@@ -26,7 +26,8 @@ void setup() {
   delay(1000);
  
   //Send new SMS command and message number
-  serialSIM800.write("AT+CMGS=\"+4551222390\"\r\n");
+  //This should be a real phone number
+  serialSIM800.write("AT+CMGS=\"+xxxxxxxxxx\"\r\n");
   delay(1000);
    
   //Send SMS content
