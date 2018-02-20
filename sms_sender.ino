@@ -1,4 +1,6 @@
 #include <SoftwareSerial.h>
+#include <HardwareSerial.h>
+#include <Arduino.h>
  
 //SIM800 TX is connected to Arduino D8
 #define SIM800_TX_PIN 8
@@ -42,6 +44,9 @@ void setup() {
 }
  
 void loop() {
+
+  Hello hello;
+
   //Read SIM800 output (if available) and print it in Arduino IDE Serial Monitor
   if(serialSIM800.available()){
     Serial.write(serialSIM800.read());
@@ -49,5 +54,13 @@ void loop() {
   //Read Arduino IDE Serial Monitor inputs (if available) and send them to SIM800
   if(Serial.available()){    
     serialSIM800.write(Serial.read());
+  }
+}
+
+class Hello{
+  public:
+  String name;
+  void setName(String x){
+    name = x;
   }
 }
