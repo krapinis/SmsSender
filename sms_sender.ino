@@ -45,7 +45,7 @@ void setup() {
  
 void loop() {
 
-  Hello hello;
+  Door door;
 
   //Read SIM800 output (if available) and print it in Arduino IDE Serial Monitor
   if(serialSIM800.available()){
@@ -57,9 +57,13 @@ void loop() {
   }
 }
 
-class Hello{
+class Door{
   public:
   String name;
+  String status;
+  void setStatus(String x){
+    name = x;
+  }
   void setName(String x){
     name = x;
   }
