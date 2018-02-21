@@ -1,3 +1,12 @@
+//Issue with Serial.begin not being defined corectly
+//https://github.com/Microsoft/vscode-cpptools/issues/743
+
+//Debugging the Arduino code
+//https://blogs.msdn.microsoft.com/iotdev/2017/05/27/debug-your-arduino-code-with-visual-studio-code/
+
+//this is real deal
+//https://github.com/ARMmbed/Debugging-docs/blob/master/Docs/Debugging/vscode.md
+
 #include <SoftwareSerial.h>
 #include <HardwareSerial.h>
 #include <Arduino.h>
@@ -10,8 +19,28 @@
  
 //Create software serial object to communicate with SIM800
 SoftwareSerial serialSIM800(SIM800_TX_PIN,SIM800_RX_PIN);
- 
+
+class Door{
+  public:
+  String name;
+  int pin;
+  int timestamp;
+  int status;
+  void setStatus(int s){
+    status = s;
+  }
+  void setName(String n){
+    name = n;
+  }
+};
+
+Door door;
+
+
 void setup() {
+
+door.setStatus(1);
+
   //Begin serial comunication with Arduino and Arduino IDE (Serial Monitor)
   Serial.begin(9600);
   while(!Serial);
@@ -54,17 +83,5 @@ void loop() {
   //Read Arduino IDE Serial Monitor inputs (if available) and send them to SIM800
   if(Serial.available()){    
     serialSIM800.write(Serial.read());
-  }
-}
-
-class Door{
-  public:
-  String name;
-  String status;
-  void setStatus(String x){
-    name = x;
-  }
-  void setName(String x){
-    name = x;
   }
 }
