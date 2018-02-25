@@ -1,8 +1,7 @@
 {
     "sketch": "sms_sender.ino",
     "port": "COM3",
-    "board": "arduino:avr:pro",
+    "board": "arduino:avr:uno",
     "output": "../build",
-    "debugger": "jlink",
-    "configuration": "cpu=16MHzatmega328"
+    "debugger": "jlink"
 }

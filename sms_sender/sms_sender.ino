@@ -1,3 +1,5 @@
+
+
 //Issue with Serial.begin not being defined corectly
 //https://github.com/Microsoft/vscode-cpptools/issues/743
 
@@ -10,7 +12,7 @@
 #include <SoftwareSerial.h>
 #include <HardwareSerial.h>
 #include <Arduino.h>
- 
+
 //SIM800 TX is connected to Arduino D8
 #define SIM800_TX_PIN 8
  
@@ -22,33 +24,45 @@ SoftwareSerial serialSIM800(SIM800_TX_PIN,SIM800_RX_PIN);
 
 class Door{
   public:
-  String name;
-  int pin;
-  int timestamp;
-  int status;
-  void setStatus(int s){
-    status = s;
+  int Pin;
+  int State;
+  Door(){};
+  void setPin(int p){
+    this->Pin = p;
   }
-  void setName(String n){
-    name = n;
-  }
+    
 };
 
+
+//Instance of the door
 Door door;
 
 
 void setup() {
 
-door.setStatus(1);
-
+//Array of doors
+  door.Pin = 1;
+  door.setPin(2);
+  Door listOfDoors[1] = door;  
+  
   //Begin serial comunication with Arduino and Arduino IDE (Serial Monitor)
   Serial.begin(9600);
   while(!Serial);
    
-  //Being serial communication witj Arduino and SIM800
+  //Being serial communication with Arduino and SIM800
   serialSIM800.begin(9600);
   delay(1000);
-   
+
+  //Print list of doors
+  Serial.println("Array size is: " +(String)(sizeof(listOfDoors)/(sizeof(*listOfDoors))));
+  
+    for(auto& myDoor : listOfDoors){
+      Serial.println("Door--------");
+      Serial.println("Pin: " + (String)myDoor.Pin);
+      Serial.println("Status: " + (String)myDoor.State);
+    }
+
+  
   Serial.println("Setup Complete!");
   Serial.println("Sending SMS...");
    
@@ -76,12 +90,14 @@ void loop() {
 
   Door door;
 
+  
+
   //Read SIM800 output (if available) and print it in Arduino IDE Serial Monitor
   if(serialSIM800.available()){
     Serial.write(serialSIM800.read());
   }
   //Read Arduino IDE Serial Monitor inputs (if available) and send them to SIM800
-  if(Serial.available()){    
+  if(Serial.available()){  
     serialSIM800.write(Serial.read());
   }
 }
