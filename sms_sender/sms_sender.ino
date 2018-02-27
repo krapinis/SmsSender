@@ -26,10 +26,12 @@ class Door{
   public:
   int Pin;
   int State;
+  char Mode;
   Door(){};
   void setPin(int pin){
     this->Pin = pin;
     this->State = digitalRead(pin);
+    this->Mode = INPUT;
   }
   void setState(int state){
     this->State = state;
@@ -42,9 +44,10 @@ Door door;
 
 
 void setup() {
-
+  
   //Setting up the door
   door.setPin(3);
+  
 
   //Array of doors
   Door doors[1] = {door};  
@@ -102,13 +105,16 @@ void loop() {
 void doorSetup(Door doors[]){
 
   int count = (sizeof(doors)/(sizeof(Door *)));
-  Serial.println(count);
+  
   //Checking the status of all doors
     for(int i = 0; i < count; i++){
       Serial.println("----------------Door------------");
+      pinMode(door.Pin, door.Mode);
       Serial.println("Door PIN: " + (String)door.Pin);
+      Serial.print((uint8_t)door.Mode);
+      Serial.println();
       Serial.println("Door State: " + (String)door.State);
     }
-  Serial.println("-----------------------------------------------------------------");
+  Serial.println("------------------------------------");
 }
 
