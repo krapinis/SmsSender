@@ -27,10 +27,13 @@ class Door{
   int Pin;
   int State;
   Door(){};
-  void setPin(int p){
-    this->Pin = p;
+  void setPin(int pin){
+    this->Pin = pin;
+    this->State = digitalRead(pin);
   }
-    
+  void setState(int state){
+    this->State = state;
+  }
 };
 
 
@@ -40,28 +43,25 @@ Door door;
 
 void setup() {
 
-//Array of doors
-  door.Pin = 1;
-  door.setPin(2);
-  Door listOfDoors[1] = door;  
+  //Setting up the door
+  door.setPin(3);
+
+  //Array of doors
+  Door doors[1] = {door};  
   
   //Begin serial comunication with Arduino and Arduino IDE (Serial Monitor)
   Serial.begin(9600);
   while(!Serial);
-   
+
   //Being serial communication with Arduino and SIM800
   serialSIM800.begin(9600);
   delay(1000);
 
   //Print list of doors
-  Serial.println("Array size is: " +(String)(sizeof(listOfDoors)/(sizeof(*listOfDoors))));
-  
-    for(auto& myDoor : listOfDoors){
-      Serial.println("Door--------");
-      Serial.println("Pin: " + (String)myDoor.Pin);
-      Serial.println("Status: " + (String)myDoor.State);
-    }
+  Serial.println("Array size is: " +(String)(sizeof(doors)/(sizeof(*doors))));
 
+  //SETUP
+  doorSetup(doors);
   
   Serial.println("Setup Complete!");
   Serial.println("Sending SMS...");
@@ -87,9 +87,6 @@ void setup() {
 }
  
 void loop() {
-
-  Door door;
-
   
 
   //Read SIM800 output (if available) and print it in Arduino IDE Serial Monitor
@@ -101,3 +98,17 @@ void loop() {
     serialSIM800.write(Serial.read());
   }
 }
+
+void doorSetup(Door doors[]){
+
+  int size = (sizeof(doors)/(sizeof(*doors)));
+  
+  //Checking the status of all doors
+    for(int i = 0; i < size; i++){
+      Serial.println("----------------Door------------");
+      Serial.println("Door PIN: " + (String)door.Pin);
+      Serial.println("Door State: " + (String)door.State);
+    }
+  Serial.println("-----------------------------------------------------------------");
+}
+
