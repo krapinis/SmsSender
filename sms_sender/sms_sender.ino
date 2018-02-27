@@ -101,10 +101,10 @@ void loop() {
 
 void doorSetup(Door doors[]){
 
-  int size = (sizeof(doors)/(sizeof(*doors)));
-  
+  int count = (sizeof(doors)/(sizeof(Door *)));
+  Serial.println(count);
   //Checking the status of all doors
-    for(int i = 0; i < size; i++){
+    for(int i = 0; i < count; i++){
       Serial.println("----------------Door------------");
       Serial.println("Door PIN: " + (String)door.Pin);
       Serial.println("Door State: " + (String)door.State);
