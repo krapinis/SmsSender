@@ -16,7 +16,7 @@ Arduino shield sends an SMS if pin is ON
 
 Download Arduino IDE for your operating system from this [link](https://www.arduino.cc/en/Main/Software)
 
-Installation instruction links could be found in GitHub :octocat for each OS:
+Installation instruction links could be found in GitHub :octocat: for each OS:
 
 - [Windows](https://www.arduino.cc/en/Guide/Windows)
 - [Mac OS](https://www.arduino.cc/en/Guide/MacOSX)
