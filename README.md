@@ -9,6 +9,7 @@ Arduino shield sends an SMS if pin is ON
 - [Installation](#Installation)
 - [Arduino IDE](#Arduino_IDE)
 - [Libraries](#Libraries)
+- [Hardware](Hardware)
 
 ## Installation
 
@@ -28,6 +29,9 @@ Installation instruction links could be found in GitHub :octocat: for each OS:
 
 ## Hardware
 
-- Arduino Uno
-- SMS Shield
+>These are the boards that are used in the project
 
+|Board Model|
+|:---:|
+|Arduino Uno Rev3|
+|SIM800L V2.2|
