@@ -6,10 +6,10 @@ Arduino shield sends an SMS if pin is ON
 
 ## Table of Contents
 
-- [Installation](##Installation)
-- [Arduino IDE](###Arduino_IDE)
-- [Libraries](##Libraries)
-- [Hardware](##Hardware)
+- [Installation](#Installation)
+- [Arduino IDE](#Arduino_IDE)
+- [Libraries](#Libraries)
+- [Hardware](#Hardware)
 
 ## Installation
 
