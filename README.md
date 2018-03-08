@@ -4,11 +4,11 @@ The intent of this project is to send a SMS when ever the door is open or closed
 
 Arduino shield sends an SMS if pin is ON
 
-## Content
+## Table of Contents
 
-[Installation](#Installation)
-[Arduino IDE](#Arduino_IDE)
-[Libraries](#Libraries)
+- [Installation](#Installation)
+- [Arduino IDE](#Arduino_IDE)
+- [Libraries](#Libraries)
 
 ## Installation
 
