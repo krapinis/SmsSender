@@ -1,5 +1,3 @@
-
-
 //Issue with Serial.begin not being defined corectly
 //https://github.com/Microsoft/vscode-cpptools/issues/743
 
@@ -9,9 +7,22 @@
 //this is real deal
 //https://github.com/ARMmbed/Debugging-docs/blob/master/Docs/Debugging/vscode.md
 
+
+//#include <GSMSim.h> - this is the library in question
+
+//https://playground.arduino.cc/Code/DateTime
+#include <Time.h>
+#include <TimeLib.h>
+#include <TimeAlarms.h>
 #include <SoftwareSerial.h>
 #include <HardwareSerial.h>
 #include <Arduino.h>
+
+//time sync to PC is HEADER and unix time_t as ten ascii digits
+#define TIME_MSG_LEN 11
+
+//Header tag for serial time sync meassage
+#define TIME_HEADER 255
 
 //SIM800 TX is connected to Arduino D8
 #define SIM800_TX_PIN 8
@@ -27,6 +38,8 @@ class Door{
   int Pin;
   int State;
   char Mode;
+  //time since the door has been last opened
+  //time since the door has benn last closed
   Door(){};
   void setPin(int pin){
     this->Pin = pin;
@@ -44,6 +57,8 @@ Door door;
 
 
 void setup() {
+  //TIME Setup
+  setTime(8,29,0,1,1,10);
   
   //Setting up the door
   door.setPin(3);
@@ -68,7 +83,13 @@ void setup() {
   
   Serial.println("Setup Complete!");
   Serial.println("Sending SMS...");
-   
+
+  //TIME
+  Serial.print(hour());
+  Serial.print(minute());
+  Serial.print(second());
+  Serial.println();
+  
   //Set SMS format to ASCII
   serialSIM800.write("AT+CMGF=1\r\n");
   delay(1000);

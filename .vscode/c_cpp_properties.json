@@ -6,6 +6,8 @@
                 "${workspaceRoot}",
                 "C:\\Source\\SmsSender",
                 "C:\\Users\\Mantas\\Documents\\Arduino\\libraries\\Door",
+                "C:\\Users\\Mantas\\Documents\\Arduino\\libraries\\Time",
+                "C:\\Users\\Mantas\\Documents\\Arduino\\libraries\\TimeAlarms",
                 "C:\\Program Files (x86)\\Arduino\\hardware\\arduino\\avr\\cores\\arduino",
                 "C:\\Program Files (x86)\\Arduino\\hardware\\tools\\avr\\avr\\include",
                 "C:\\Program Files (x86)\\Arduino\\hardware\\tools\\avr\\lib\\gcc\\avr\\4.9.2\\include",
@@ -22,6 +24,7 @@
                     "${workspaceRoot}",
                     "C:\\Source\\SmsSender",
                     "C:/Program Files (x86)/Arduino",
+                    
                     "C:\\Program Files (x86)\\Arduino\\hardware\\arduino\\avr\\cores\\arduino",
                     "C:\\Program Files (x86)\\Arduino\\hardware\\tools\\avr\\avr\\include",
                     "C:\\Program Files (x86)\\Arduino\\hardware\\tools\\avr\\lib\\gcc\\avr\\4.9.2\\include",
