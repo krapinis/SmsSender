@@ -26,6 +26,9 @@ Installation instruction links could be found in GitHub :octocat: for each OS:
 ## Libraries
 
 - <Time.h>
+- <TimeLib.h>
+- <TimeAlarms.h>
+- <SoftwareSerial.h>
 
 ## Hardware
 
