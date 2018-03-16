@@ -40,34 +40,35 @@ class Door{
   
   Door(){};
   void setPin(int pin){
-    this->Pin = pin;
-    this->State = digitalRead(pin);
-    this->Mode = INPUT;
+    Pin = pin;
+    State = digitalRead(pin);
+    Mode = INPUT;
 
     if(State == 0){
-      digitalWrite(this->IndicatorLed, 1);
-      }else{
-        digitalWrite(this->IndicatorLed, 0);
+      digitalWrite(IndicatorLed, 1);
+      }
+    if(State == 1){
+        digitalWrite(IndicatorLed, 0);
       }
   }
   void setState(int state){
     
     if(state == 0){
-      this->State = 0;
-      this->TimeStampOpen = now();
-      digitalWrite(this->IndicatorLed, 0);
+      State = 0;
+      TimeStampOpen = now();
+      digitalWrite(IndicatorLed, 1);
     }else if (state == 1){
-      this->State=1;
-      this->TimeStampClosed = now();
-      digitalWrite(this->IndicatorLed, 1);
+      State = 1;
+      TimeStampClosed = now();
+      digitalWrite(IndicatorLed, 0);
     }
   }
   void doorOpenTime(){
-    this->TimeStampOpen = now();
+    TimeStampOpen = now();
     Serial.println(TimeStampOpen);
   }
   void doorClosedTime(){
-    this->TimeStampClosed = now();
+    TimeStampClosed = now();
     Serial.println(TimeStampClosed);
   }
 };
@@ -129,14 +130,18 @@ void loop() {
     Serial.println("Time is not set");
   }
 
+  //If the door is CLOSED
   if(digitalRead(door.Pin) == 1){
+    door.setState(1);
     //1 the door is closed
-    digitalWrite(door.IndicatorLed, 0);
+    //digitalWrite(door.IndicatorLed, 0);
   }
+
+  //If the door is OPEN
   if(digitalRead(door.Pin) == 0){
     door.setState(0);
     sendSMS(door);
-    digitalWrite(door.IndicatorLed, 1);
+    //digitalWrite(door.IndicatorLed, 1);
   }
   
 
