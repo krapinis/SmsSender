@@ -33,10 +33,12 @@ Installation instruction links could be found in GitHub :octocat: for each OS:
 
 Board Model|Amount|Description
 :---:|:---:|:---:
-|Arduino Uno Rev3|1
-|SIM800L V2.2|1
-|Resistors|2
-|Capacitor|1|1000µF
-|LED|2|Red & Yellow
-|Breadboard|1|half
-|Breadboard Power Supply Module 3.3V/5V For Arduino Board |1|Input 7V - 12V
+Arduino Uno Rev3|1
+SIM800L V2.2|1
+Resistors|2
+Capacitor|1|1000µF 25V -40+105 Celsius
+LED|2|Red & Yellow
+Breadboard|1|half
+Breadboard Power Supply Module 3.3V/5V For Arduino Board |1|Input 7V - 12V
+Wires for breadboard|8
+Antena for SIM800L module|1
