@@ -13,16 +13,8 @@
 //https://playground.arduino.cc/Code/DateTime
 #include <Time.h>
 #include <TimeLib.h>
-#include <TimeAlarms.h>
 #include <SoftwareSerial.h>
-#include <HardwareSerial.h>
 #include <Arduino.h>
-
-//time sync to PC is HEADER and unix time_t as ten ascii digits
-#define TIME_MSG_LEN 11
-
-//Header tag for serial time sync meassage
-#define TIME_HEADER 255
 
 //SIM800 TX is connected to Arduino D8
 #define SIM800_TX_PIN 8
@@ -36,8 +28,11 @@ SoftwareSerial serialSIM800(SIM800_TX_PIN,SIM800_RX_PIN);
 class Door{
   public:
   int Pin;
+  //State of the door is 1 open or 0 closed 
   int State;
   char Mode;
+  time_t TimeStampOpen;
+  time_t TimeStampClosed;
   //time since the door has been last opened
   //time since the door has benn last closed
   Door(){};
@@ -49,6 +44,14 @@ class Door{
   void setState(int state){
     this->State = state;
   }
+  void doorOpenTime(){
+    this->TimeStampOpen = now();
+    Serial.println(TimeStampOpen);
+  }
+  void doorClosedTime(){
+    this->TimeStampClosed = now();
+    Serial.println(TimeStampClosed);
+  }
 };
 
 
@@ -57,61 +60,53 @@ Door door;
 
 
 void setup() {
-  //TIME Setup
-  setTime(8,29,0,1,1,10);
+ //Begin serial comunication with Arduino and Arduino IDE (Serial Monitor)
+  Serial.begin(9600);
+  while(!Serial);
+  
+  //TIME default Setup
+  //setTime(hours, minutes, seconds, days, months, years);
+  setTime(15,59,3,16,3,18);
+  time_t tempTime = now();
+  if(timeStatus() == timeNotSet){
+    Serial.println("Time SETUP is incorect");
+  }else{
+    Serial.print("Time has been set to this : ");
+    printTime(tempTime);
+  }
   
   //Setting up the door
   door.setPin(3);
-  
 
   //Array of doors
   Door doors[1] = {door};  
-  
-  //Begin serial comunication with Arduino and Arduino IDE (Serial Monitor)
-  Serial.begin(9600);
-  while(!Serial);
+
+  //Print list of doors
+  Serial.println("Total doors in the system: " +(String)(sizeof(doors)/(sizeof(*doors))));
+
+  //SETUP
+  doorSetup(doors);
 
   //Being serial communication with Arduino and SIM800
   serialSIM800.begin(9600);
   delay(1000);
-
-  //Print list of doors
-  Serial.println("Array size is: " +(String)(sizeof(doors)/(sizeof(*doors))));
-
-  //SETUP
-  doorSetup(doors);
   
   Serial.println("Setup Complete!");
-  Serial.println("Sending SMS...");
-
-  //TIME
-  Serial.print(hour());
-  Serial.print(minute());
-  Serial.print(second());
-  Serial.println();
+  Serial.println("Ready to send SMS's...");
+  Serial.println("-----------------------------------------");
   
-  //Set SMS format to ASCII
-  serialSIM800.write("AT+CMGF=1\r\n");
-  delay(1000);
+  sendSMS(door); 
  
-  //Send new SMS command and message number
-  //This should be a real phone number
-  serialSIM800.write("AT+CMGS=\"+xxxxxxxxxx\"\r\n");
-  delay(1000);
-   
-  //Send SMS content
-  serialSIM800.write("TEST");
-  delay(1000);
-   
-  //Send Ctrl+Z / ESC to denote SMS message is complete
-  serialSIM800.write((char)26);
-  delay(1000);
-     
-  Serial.println("SMS Sent!");
 }
  
 void loop() {
-  
+  if (timeStatus() == timeNotSet){
+    Serial.println("Time is not set");
+  }
+
+  //if (minute() == 0){
+  //  Serial.println("hour just passed");
+  //}
 
   //Read SIM800 output (if available) and print it in Arduino IDE Serial Monitor
   if(serialSIM800.available()){
@@ -131,11 +126,83 @@ void doorSetup(Door doors[]){
     for(int i = 0; i < count; i++){
       Serial.println("----------------Door------------");
       pinMode(door.Pin, door.Mode);
-      Serial.println("Door PIN: " + (String)door.Pin);
-      Serial.print((uint8_t)door.Mode);
-      Serial.println();
-      Serial.println("Door State: " + (String)door.State);
+      Serial.println("Door " + (String)door.Pin);
+      if(door.Mode == INPUT){
+      //Serial.print((uint8_t)door.Mode);
+      Serial.println("Sensor is active");  
+      }else{
+        Serial.println("Sensor is set incorectly");
+      }
+
+      if(door.State == 0){
+        door.TimeStampClosed = now();
+        Serial.print("Door is CLOSED now : ");
+        printTime(door.TimeStampClosed);
+      }
+
+      if(door.State == 1){
+        door.TimeStampOpen = now();
+        Serial.print("Door is OPEN now : ");
+        printTime(door.TimeStampOpen);
+      }
+
+      //sendSMS(door);
+      
     }
   Serial.println("------------------------------------");
+}
+
+void printTime(time_t tempTime){
+  Serial.print(hour(tempTime));
+  Serial.print(":");
+  Serial.print(minute(tempTime));
+  Serial.print(":");
+  Serial.print(second(tempTime));
+  Serial.print(" ");
+  Serial.print(day(tempTime));
+  Serial.print("/");
+  Serial.print(month(tempTime));
+  Serial.print("/");
+  Serial.print(year(tempTime));
+  Serial.println();
+}
+
+void sendSMS(Door door){
+  //https://stackoverflow.com/questions/16290981/how-to-transmit-a-string-on-arduino
+  //issue with converting string class to char array  
+  //telephone = "+4591520714";
+
+  //command example
+//  AT+CMGF=1
+//> AT+CMGS="+4591520714"
+//> 
+//+CMGS: 71
+
+//OK
+  char toChar[16];
+  sprintf(toChar, "%d", door.State);
+
+  //Set SMS format to ASCII
+  serialSIM800.write("AT+CMGF=1\r\n");
+  delay(1000);
+ 
+  //Send new SMS command and message number
+  //This should be a real phone number
+  
+  serialSIM800.write("AT+CMGS=\"+4591520714\"\r\n");
+  delay(1000);
+
+ 
+  //Send SMS content
+  serialSIM800.write(toChar);
+  delay(1000);
+   
+  //Send Ctrl+Z / ESC to denote SMS message is complete
+  serialSIM800.write((char)26);
+  delay(1000);
+     
+  //delay(1000);
+  //Serial.println("SMS has been sent");
+  //printTime(now());
 }
 
