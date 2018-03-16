@@ -208,15 +208,12 @@ void sendSMS(Door door){
   //telephone = "+4591520714";
 
   //command example
-//AT+CMGF=1
-
-//OK
-//AT+CMGS="+4591520714"
-
-//> 1
-//+CMGS: 74
-//
-//OK
+    //AT+CMGF=1
+    //OK
+    //AT+CMGS="+4591520714"
+    //> 1
+    //+CMGS: 74
+    //OK
 
   char* str = "The door is ";
   char msg[20];
