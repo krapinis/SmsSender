@@ -184,6 +184,8 @@ void doorSetup(Door doors[]){
   Serial.println("------------------------------------");
 }
 
+#pragma region TimePrinterToSerial
+
 void printTime(time_t tempTime){
   Serial.print(hour(tempTime));
   Serial.print(":");
@@ -198,6 +200,8 @@ void printTime(time_t tempTime){
   Serial.print(year(tempTime));
   Serial.println();
 }
+
+#pragma endregion TimePrinterToSerial
 
 void sendSMS(Door door){
   //Concatination issues in C
