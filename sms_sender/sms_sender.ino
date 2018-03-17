@@ -24,14 +24,15 @@
 //Create software serial object to communicate with SIM800
 SoftwareSerial serialSIM800(SIM800_TX_PIN, SIM800_RX_PIN);
 
-char enterKey = 13;
-String ctrlZKey = "\x1A";
-String smsMessage = "";
+//TELEPHONE
+//+4591829151 sender
+const char* telephone = "+4591520714";
 
 #pragma region Door Class...
 
 class Door
 {
+  //HIGH and LOW is 1 and 0
 public:
   int Pin;
   int SmsLED = 4;
@@ -41,24 +42,33 @@ public:
   //State of the door is 0 open or 1 closed
   int State;
   char Mode;
+  bool SmSent = false;
   time_t TimeStampOpen;
   time_t TimeStampClosed;
+  String ErrorMessage;
+  String Message;
 
   Door(){};
   void setPin(int pin)
   {
-    Pin = pin;
-    State = digitalRead(pin);
-    Mode = INPUT;
+    this->Pin = pin;
+    this->State = getState(pin);
+    //digitalRead(pin);
+    this->Mode = INPUT;
 
-    if (State == 0)
+    if (this->State == 0)
     {
       digitalWrite(DoorLED, 1);
     }
-    if (State == 1)
+    else if (this->State == 1)
     {
       digitalWrite(DoorLED, 0);
+    }else{
+      this->ErrorMessage = "Error: Check door state";
     }
+  }
+  int getState(int pin){
+    return digitalRead(pin);
   }
   void setState(int state)
   {
@@ -69,7 +79,7 @@ public:
       TimeStampOpen = now();
       digitalWrite(DoorLED, 1);
     }
-    else if (state == 1)
+    if (state == 1)
     {
       State = 1;
       TimeStampClosed = now();
@@ -98,6 +108,8 @@ Door door;
 void setup()
 {
 
+  door.setPin(3);
+  
   //Begin serial comunication with Arduino and Arduino IDE (Serial Monitor)
   Serial.begin(9600);
   while (!Serial);
@@ -121,11 +133,6 @@ void setup()
     printTime(tempTime);
   }
 
-  //Setting up the door
-  //door.setPin(3);
-  door.setPin(3);
-  //door.State = digitalRead(door.Pin);
-
   //Array of doors
   Door doors[1] = {door};
 
@@ -139,7 +146,11 @@ void setup()
   Serial.println();
   Serial.println("\t\t     Ready to send SMS's...");
   printDevider();
-
+  
+  char* tempPointer = (char *)malloc(200);
+  tempPointer = createMessage(door);
+  Serial.print(tempPointer);
+  free(tempPointer);
   //sendSMS(door);
 }
 
@@ -157,17 +168,13 @@ void loop()
   //If the door is CLOSED
   if (digitalRead(door.Pin) == 1)
   {
-    door.setState(1);
-    //1 the door is closed
-    //digitalWrite(door.DoorLED, 0);
+    
   }
 
   //If the door is OPEN
   if (digitalRead(door.Pin) == 0)
   {
-    door.setState(0);
-    sendSMS(door);
-    //digitalWrite(door.DoorLED, 1);
+    
   }
 
   //Read SIM800 output (if available) and print it in Arduino IDE Serial Monitor
@@ -210,6 +217,8 @@ void doorSetup(Door doors[])
     if (door.State == 0)
     {
       door.TimeStampOpen = now();
+      //LED should be off
+      door.setState(digitalRead(door.Pin));
       Serial.print("Door is OPEN now : ");
       printTime(door.TimeStampOpen);
     }
@@ -217,11 +226,10 @@ void doorSetup(Door doors[])
     if (door.State == 1)
     {
       door.TimeStampClosed = now();
+      door.setState(digitalRead(door.Pin));
       Serial.print("Door is CLOSED now : ");
       printTime(door.TimeStampClosed);
     }
-
-    //sendSMS(door);
   }
   printDevider();
 }
@@ -260,7 +268,7 @@ void printDevider(){
 
 void printStart(){
   Serial.println("  _________________________ ____________________");
-  Serial.println(" /   _____/\__    ___/  _  \\\______   \\__    ___/");
+  Serial.println(" /   _____/\\__    ___/  _  \\______   \\__    ___/");
   Serial.println(" \\_____  \\   |    | /  /_\\  \\|       _/ |    |   ");
   Serial.println(" /        \\  |    |/    |    \\    |   \\ |    |   ");
   Serial.println("/_______  /  |____|\\____|__  /____|_  / |____|   ");
@@ -273,65 +281,91 @@ void printStart(){
 
 #pragma region SMS...
 
+
 void setGSMModemToTextMode(){
-  //initialize text mode
-  //https://www.diafaan.com/sms-tutorials/gsm-modem-tutorial/at-cmgf/
-  //AT+CMGF=<mode><CR>
-  //Two modes Text or PDU
-  serialSIM800.print("AT+CMGF=1");
-  serialSIM800.print(enterKey);
+  char cmd[12];
+  strcpy(cmd, "AT+CMGF=1");
+  strcat(cmd,"\r");
+  strcat(cmd,"\n");
+  serialSIM800.write(cmd);
+  delay(50);
 }
 
-void sendSMS(Door door)
-{
-  //Concatination issues in C
-  //https://stackoverflow.com/questions/2218290/concatenate-char-array-in-c
-
-  //https://stackoverflow.com/questions/16290981/how-to-transmit-a-string-on-arduino
-  //issue with converting string class to char array
-  //telephone = "+4591520714";
-  
-  char *str = "The door is ";
-  char msg[20];
-  strcpy(msg, str);
-
-  //Set SMS format to ASCII
-  //serialSIM800.write("AT+CMGF=1\r\n");
+void initializeSMSend(){
   setGSMModemToTextMode();
-  delay(1500);
+  char cmd[23];
+  strcpy(cmd, "AT+CMGS=\"");
+  strcat(cmd, telephone);
+  strcat(cmd, "\"");
+  strcat(cmd, "\r");
+  strcat(cmd, "\n");
+  serialSIM800.write(cmd);
+  delay(100);
+}
 
-  //Send new SMS command and message number
+char* createMessage(Door tDoor){
 
-  serialSIM800.write("AT+CMGS=\"+4591520714\"\r\n");
-  delay(1000);
+  //Memory allocation for the message
+  char *msg = (char *)malloc(200);
+  char tempDoorNumber[1];
+  sprintf(tempDoorNumber, "%d", tDoor.Pin); 
+  strcpy(msg, "Door number ");
+  strcat(msg, tempDoorNumber);
+  
+  if(tDoor.State == 0)
+  {
+    strcat(msg, " is OPEN");
+    return msg;
+  }
+  if(tDoor.State == 1)
+  {
+    strcat(msg, " is CLOSED");  
+    return msg;
+  }
+  else
+  {
+    return NULL;
+  }
+}
 
+void sendSMS()
+{
+
+  char* smsMessage = (char *)malloc(200);
+  
   if (door.State == 0)
   {
-
-    strcat(msg, "OPEN");
-    Serial.println(msg);
+    
+    
+    smsMessage = createMessage(door);
+    
+    //At this point module is ready to send SMS
+    //initializeSMSend();
+    
+    //Serial.println(smsMessage);
+    //serialSIM800.write(smsMessage);
+    
+    //Ctrl+Z termination char
+    //serialSIM800.write((char)26);
+    free(smsMessage);
   }
 
   if (door.State == 1)
   {
-    strcat(msg, "CLOSED");
-    Serial.println(msg);
+    //At this point module is ready to send SMS
+//    initializeSMSend();
+//    strcat(smsMessage, " is CLOSED");
+//    strcat(smsMessage, "\r");
+//    strcat(smsMessage, "\n");
+//    strcat(smsMessage, "now you should open it");
+//    strcat(smsMessage, "\r");
+//    strcat(smsMessage, "\n");
+    
+    
+    //serialSIM800.write(smsMessage);
+    //serialSIM800.write((char)26);
   }
-
-  //convert intiger to char
-  //char toChar[16];
-  //sprintf(toChar, "%d", door.State);
-
-  //Send SMS content
-  serialSIM800.write(msg);
-  delay(1000);
-
-  //Send Ctrl+Z / ESC to denote SMS message is complete
-  serialSIM800.write((char)26);
-  delay(1000);
-
-  //delay(1000);
-  //Serial.println("SMS has been sent");
-  //printTime(now());
+  //smsMessage[0]=0;
 }
+
 #pragma endregion SMS...
