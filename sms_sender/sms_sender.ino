@@ -1,14 +1,3 @@
-//Issue with Serial.begin not being defined corectly
-//https://github.com/Microsoft/vscode-cpptools/issues/743
-
-//Debugging the Arduino code
-//https://blogs.msdn.microsoft.com/iotdev/2017/05/27/debug-your-arduino-code-with-visual-studio-code/
-
-//this is real deal
-//https://github.com/ARMmbed/Debugging-docs/blob/master/Docs/Debugging/vscode.md
-
-//#include <GSMSim.h> - this is the library in question
-
 //https://playground.arduino.cc/Code/DateTime
 #include <Time.h>
 #include <TimeLib.h>
@@ -115,6 +104,7 @@ void setup()
   while (!Serial);
 
   printStart();
+  printDivider();
   
   //Being serial communication with Arduino and SIM800
   serialSIM800.begin(9600);
@@ -145,7 +135,7 @@ void setup()
   Serial.println("\t\t\tSetup Complete!");
   Serial.println();
   Serial.println("\t\t     Ready to send SMS's...");
-  printDevider();
+  printDivider();
   
   char* tempPointer = (char *)malloc(200);
   tempPointer = createMessage(door);
@@ -201,17 +191,18 @@ void doorSetup(Door doors[])
   //Checking the status of all doors
   for (int i = 0; i < count; i++)
   {
-    Serial.println("----------------Door------------");
+    Serial.println("\t-------------------Door----------------");
     pinMode(door.Pin, door.Mode);
     pinMode(door.DoorLED, door.DoorLEDMode);
-    Serial.println("Door " + (String)door.Pin);
+    Serial.println("\tDoor " + (String)door.Pin);
     if (door.Mode == INPUT)
     {
-      Serial.println("Sensor is active");
+      Serial.println("\tSensor is active");
     }
     else
     {
-      Serial.println("Sensor is set incorectly");
+      door.ErrorMessage = "Error: sensor is setup incorect";
+      Serial.println(door.ErrorMessage);
     }
 
     if (door.State == 0)
@@ -219,7 +210,8 @@ void doorSetup(Door doors[])
       door.TimeStampOpen = now();
       //LED should be off
       door.setState(digitalRead(door.Pin));
-      Serial.print("Door is OPEN now : ");
+      door.Message = "Door is OPEN ";
+      Serial.print(door.Message);
       printTime(door.TimeStampOpen);
     }
 
@@ -227,11 +219,12 @@ void doorSetup(Door doors[])
     {
       door.TimeStampClosed = now();
       door.setState(digitalRead(door.Pin));
-      Serial.print("Door is CLOSED now : ");
+      door.Message = "Door is CLOSED ";
+      Serial.print(door.Message);
       printTime(door.TimeStampClosed);
     }
   }
-  printDevider();
+  printDivider();
 }
 
 #pragma endregion DoorSetup...
@@ -258,7 +251,7 @@ void printTime(time_t tempTime)
 
 #pragma region Print Formatting...
 
-void printDevider(){
+void printDivider(){
   Serial.println();
   Serial.println("---+---+---+---+---+---+---+---+---+---+---+---+---+---+---+---+---+--");
   Serial.println(" o | o   o | o   o | o   o | o   o | o   o | o   o | o   o | o   o | o");
@@ -267,12 +260,12 @@ void printDevider(){
 }
 
 void printStart(){
-  Serial.println("  _________________________ ____________________");
-  Serial.println(" /   _____/\\__    ___/  _  \\______   \\__    ___/");
-  Serial.println(" \\_____  \\   |    | /  /_\\  \\|       _/ |    |   ");
-  Serial.println(" /        \\  |    |/    |    \\    |   \\ |    |   ");
-  Serial.println("/_______  /  |____|\\____|__  /____|_  / |____|   ");
-  Serial.println("        \\/                 \\/       \\/           ");
+  Serial.println("\t  _________________________ ____________________");
+  Serial.println("\t /   _____/\\__    ___/  _  \\______   \\__    ___/");
+  Serial.println("\t \\_____  \\   |    | /  /_\\  \\|       _/ |    |   ");
+  Serial.println("\t /        \\  |    |/    |    \\    |   \\ |    |   ");
+  Serial.println("\t/_______  /  |____|\\____|__  /____|_  / |____|   ");
+  Serial.println("\t        \\/                 \\/       \\/           ");
   Serial.println();
 }
 
@@ -308,6 +301,12 @@ char* createMessage(Door tDoor){
   //Memory allocation for the message
   char *msg = (char *)malloc(200);
   char tempDoorNumber[1];
+  char buffTime[20];
+  
+  //time_t now = time(NULL);
+
+  //strftime(buff, 20, "%Y-%m-%d %H:%M:%S",localtime(&now));
+  
   sprintf(tempDoorNumber, "%d", tDoor.Pin); 
   strcpy(msg, "Door number ");
   strcat(msg, tempDoorNumber);
@@ -315,11 +314,20 @@ char* createMessage(Door tDoor){
   if(tDoor.State == 0)
   {
     strcat(msg, " is OPEN");
+    strcat(msg, "\r");
+    strcat(msg, "\n");
+    strcat(msg, "this a new line");
     return msg;
   }
   if(tDoor.State == 1)
   {
-    strcat(msg, " is CLOSED");  
+    strcat(msg, " is CLOSED");
+    strcat(msg, "\r");
+    strcat(msg, "\n");
+    monthStr(month());
+    strcat(msg, dayStr(weekday(door.TimeStampClosed)));
+    //FORMAT the time here
+    ;
     return msg;
   }
   else
