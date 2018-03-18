@@ -324,15 +324,39 @@ char* createMessage(Door tDoor){
     strcat(msg, " is CLOSED");
     strcat(msg, "\r");
     strcat(msg, "\n");
-    monthStr(month());
+    
+    //Time conversion to const char*
+    char tempHour[3];
+    sprintf(tempHour , "%d", hour(door.TimeStampClosed));
+    char tempMinute[3];
+    sprintf(tempMinute , "%d", minute(door.TimeStampClosed));
+    char tempSecond[3];
+    sprintf(tempSecond , "%d", second(door.TimeStampClosed));
+    
+    //Time HH:MM:SS
+    strcat(msg, "\t");
+    strcat(msg, tempHour);
+    strcat(msg, ":");
+    strcat(msg, tempMinute);
+    strcat(msg, ":");
+    strcat(msg, tempSecond);
+    strcat(msg, "\t");
+    
+    //Weekday - Month
     strcat(msg, dayStr(weekday(door.TimeStampClosed)));
+    strcat(msg, " - ");
+    strcat(msg, monthStr(month(door.TimeStampClosed)));
+    strcat(msg, "\r");
+    strcat(msg, "\n");
     //FORMAT the time here
-    ;
+    
     return msg;
   }
   else
   {
-    return NULL;
+    door.ErrorMessage = "ERROR: Major error";
+    strcat(msg, "ERROR");
+    return msg;
   }
 }
 
@@ -373,7 +397,6 @@ void sendSMS()
     //serialSIM800.write(smsMessage);
     //serialSIM800.write((char)26);
   }
-  //smsMessage[0]=0;
 }
 
 #pragma endregion SMS...
