@@ -30,6 +30,7 @@ public:
   char SmsLEDMode = OUTPUT;
   //State of the door is 0 open or 1 closed
   int State;
+  int LastState = 1;
   char Mode;
   bool SmSent = false;
   time_t TimeStampOpen;
@@ -150,33 +151,41 @@ void setup()
 
 void loop()
 {
-  if (timeStatus() == timeNotSet)
-  {
-    Serial.println("Time is not set");
-  }
+  //Check the door state
+  door.State = digitalRead(door.Pin);
 
-  //If the door is CLOSED
-  if (digitalRead(door.Pin) == 1)
-  {
-    
-  }
+  //If start
+  if(door.State == 0 && door.State != door.LastState){
+    if(door.State == 0){
+      Serial.println("Door just OPENED");
+      door.TimeStampOpen = now();
+      digitalWrite(door.DoorLED, 1);
+      door.State = 1;
+    }
+    else if (door.State != 0) {
+      door.State = 0;
+    }
+    //char * msg = (char *)malloc(200);
+    //msg = createMessage(door);
+    //sendSMS(msg);
+    //delay(1000);
+    //digitalWrite(door.SmsLED, 1);
+    //Serial.println("Open");
 
-  //If the door is OPEN
-  if (digitalRead(door.Pin) == 0)
-  {
-    
-  }
+    //free(msg);
+  door.LastState = door.State; 
 
   //Read SIM800 output (if available) and print it in Arduino IDE Serial Monitor
-  if (serialSIM800.available())
-  {
-    Serial.write(serialSIM800.read());
-  }
+  //if (serialSIM800.available())
+  //{
+  //  Serial.write(serialSIM800.read());
+  //}
   //Read Arduino IDE Serial Monitor inputs (if available) and send them to SIM800
-  if (Serial.available())
-  {
-    serialSIM800.write(Serial.read());
-  }
+  //if (Serial.available())
+  //{
+  //  serialSIM800.write(Serial.read());
+  //}
+}
 }
 
 #pragma endregion LOOP...
@@ -332,9 +341,15 @@ char* createMessage(Door tDoor){
     sprintf(tempMinute , "%d", minute(door.TimeStampClosed));
     char tempSecond[3];
     sprintf(tempSecond , "%d", second(door.TimeStampClosed));
+    char tempDay[2];
+    sprintf(tempDay , "%d", day(door.TimeStampClosed));
+    char tempMonth[2];
+    sprintf(tempMonth , "%d", month(door.TimeStampClosed));
+    char tempYear[4];
+    sprintf(tempYear , "%d", year(door.TimeStampClosed));
+    
     
     //Time HH:MM:SS
-    strcat(msg, "\t");
     strcat(msg, tempHour);
     strcat(msg, ":");
     strcat(msg, tempMinute);
@@ -342,10 +357,12 @@ char* createMessage(Door tDoor){
     strcat(msg, tempSecond);
     strcat(msg, "\t");
     
-    //Weekday - Month
-    strcat(msg, dayStr(weekday(door.TimeStampClosed)));
-    strcat(msg, " - ");
-    strcat(msg, monthStr(month(door.TimeStampClosed)));
+    //Date DD/MM/YYYYY
+    strcat(msg, tempDay);
+    strcat(msg, "/");
+    strcat(msg, tempMonth);
+    strcat(msg, "/");
+    strcat(msg, tempYear);
     strcat(msg, "\r");
     strcat(msg, "\n");
     //FORMAT the time here
@@ -360,43 +377,22 @@ char* createMessage(Door tDoor){
   }
 }
 
-void sendSMS()
+void sendSMS(char *message)
 {
 
-  char* smsMessage = (char *)malloc(200);
-  
-  if (door.State == 0)
-  {
-    
-    
-    smsMessage = createMessage(door);
+  //char* smsMessage = (char *)malloc(200);
+  //smsMessage = createMessage(door);
     
     //At this point module is ready to send SMS
-    //initializeSMSend();
+    initializeSMSend();
     
     //Serial.println(smsMessage);
-    //serialSIM800.write(smsMessage);
+    serialSIM800.write(message);
     
     //Ctrl+Z termination char
-    //serialSIM800.write((char)26);
-    free(smsMessage);
-  }
-
-  if (door.State == 1)
-  {
-    //At this point module is ready to send SMS
-//    initializeSMSend();
-//    strcat(smsMessage, " is CLOSED");
-//    strcat(smsMessage, "\r");
-//    strcat(smsMessage, "\n");
-//    strcat(smsMessage, "now you should open it");
-//    strcat(smsMessage, "\r");
-//    strcat(smsMessage, "\n");
+    serialSIM800.write((char)26);
     
-    
-    //serialSIM800.write(smsMessage);
-    //serialSIM800.write((char)26);
-  }
+    free(message);
 }
 
 #pragma endregion SMS...
