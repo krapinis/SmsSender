@@ -19,6 +19,10 @@ const char* telephone = "+4591520714";
 char *smsMessage;
 long time = 0;
 long debounce = 200;
+unsigned char armed = 0;
+unsigned char alarmed = 0;
+unsigned char alerMsg;
+unsigned char sent = 0;
 
 #pragma region Door Class...
 
@@ -35,7 +39,7 @@ public:
   //State of the door is 0 open or 1 closed
   byte State;
   byte PreviousState = 0;
-  bool InitialState;
+  bool Alarmed;
   char Mode;
   bool SmSent = false;
   int SmSCount;
@@ -145,65 +149,46 @@ void loop()
   if(door.State != door.PreviousState){
     
       if(door.State == 1){
-        door.DoorLEDState = 0;
-
-        if(door.SmSent == true){
-            //sendSMS(smsMessage);
-            Serial.println("CLOSED SMS");
-            door.SmSent = false;
-        }
+        doorClosed();
       }
         
       if(door.State == 0){
-        door.DoorLEDState = 1;
-        
-       if(door.SmSent == false){
-          Serial.println("OPEN");
-          door.SmSent = true;
-        }
+        doorOpen();
       }
     }
     
     digitalWrite(door.DoorLED, door.DoorLEDState);
     door.PreviousState = door.State;
 
-  
-//  if(door.State != door.PreviousState ){
-//    if(door.State == 1){
-//      Serial.println("OPEN");
-//    }
-//      
-//    if(door.State == 0){
-//      Serial.println("CLOSED");
-//    }
-//    //delay(50);
-//  }
-  //Switch state
-  //door.PreviousState = door.State;
-    
-    //char * msg = (char *)malloc(200);
-    //msg = createMessage(door);
-    //sendSMS(msg);
-    //delay(1000);
-    //digitalWrite(door.SmsLED, 1);
-    //Serial.println("Open");
-
-    //free(msg);
-    
-
   //Read SIM800 output (if available) and print it in Arduino IDE Serial Monitor
-  //if (serialSIM800.available())
-  //{
-  //  Serial.write(serialSIM800.read());
-  //}
+  if (serialSIM800.available())
+  {
+    Serial.write(serialSIM800.read());
+  }
   //Read Arduino IDE Serial Monitor inputs (if available) and send them to SIM800
-  //if (Serial.available())
-  //{
-  //  serialSIM800.write(Serial.read());
-  //}
+  if (Serial.available())
+  {
+    serialSIM800.write(Serial.read());
+  }
 }
 
 #pragma endregion LOOP...
+
+void arm(){
+  armed = 1;
+}
+
+void doorOpen(){
+  if(armed){
+    alarm();
+  }
+}
+
+void doorClosed(){
+  if(!alarmed){
+      Serial.println("CLOSED");
+  }
+}
 
 #pragma region DoorSetup...
 
