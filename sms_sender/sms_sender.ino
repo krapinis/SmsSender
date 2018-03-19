@@ -17,12 +17,6 @@ SoftwareSerial serialSIM800(SIM800_TX_PIN, SIM800_RX_PIN);
 //+4591829151 sender
 const char* telephone = "+4591520714";
 char *smsMessage;
-long time = 0;
-long debounce = 200;
-unsigned char armed = 0;
-unsigned char alarmed = 0;
-unsigned char alerMsg;
-unsigned char sent = 0;
 
 #pragma region Door Class...
 
@@ -39,10 +33,11 @@ public:
   //State of the door is 0 open or 1 closed
   byte State;
   byte PreviousState = 0;
-  bool Alarmed;
+  bool Armed;
   char Mode;
   bool SmSent = false;
   int SmSCount;
+  int MessageCount;
   time_t TimeStampOpen;
   time_t TimeStampClosed;
   String ErrorMessage;
@@ -53,7 +48,6 @@ public:
   {
     this->Pin = pin;
     this->Mode = INPUT;
-    this->InitialState = true;
     this->Message = "Door state is neutral at this moment";
   }
   
@@ -144,22 +138,53 @@ void loop()
 {
   door.State = digitalRead(door.Pin);
 
+  if(door.State == 0){
+    door.SmSent = false;
+  }
   //If start ssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssss
-
-  if(door.State != door.PreviousState){
-    
-      if(door.State == 1){
-        doorClosed();
-      }
-        
-      if(door.State == 0){
-        doorOpen();
-      }
-    }
-    
-    digitalWrite(door.DoorLED, door.DoorLEDState);
-    door.PreviousState = door.State;
-
+ 
+            if(door.State != door.PreviousState){
+              
+                if(door.State == 1 && door.SmSent == false){
+                  
+                  door.DoorLEDState = 0;
+                  door.Message = "DOOR IS CLOSED AND ARMED";
+          
+                  if(door.Armed == false){
+                    door.Message = "ALARM CLOSED";
+                    door.Armed = true;
+                  }
+                  door.MessageCount = 0;
+                  door.SmSent = true;
+                }
+                  
+                if(door.State == 0 && door.SmSent == false){
+                  door.Armed = false;
+                  if(door.Armed == false){
+                    door.DoorLEDState = 1;
+                    door.Message = "ALARM: --- DOOR IS OPEN";
+                    door.MessageCount = 2;
+                    door.SmSent = true;
+                  }
+                  
+                }
+              }
+          
+              if(door.MessageCount == 0){
+                Serial.println(door.Message);
+                door.MessageCount = 4;
+              }
+              if(door.MessageCount == 1){
+                Serial.println(door.Message);
+                door.MessageCount = 4;
+              }
+              if(door.MessageCount == 2){
+                Serial.println(door.Message);
+                door.MessageCount = 4;
+              }
+              digitalWrite(door.DoorLED, door.DoorLEDState);
+              door.PreviousState = door.State;
+         
   //Read SIM800 output (if available) and print it in Arduino IDE Serial Monitor
   if (serialSIM800.available())
   {
@@ -174,21 +199,7 @@ void loop()
 
 #pragma endregion LOOP...
 
-void arm(){
-  armed = 1;
-}
 
-void doorOpen(){
-  if(armed){
-    alarm();
-  }
-}
-
-void doorClosed(){
-  if(!alarmed){
-      Serial.println("CLOSED");
-  }
-}
 
 #pragma region DoorSetup...
 
@@ -218,9 +229,10 @@ void doorSetup(Door doors[])
     {
       door.TimeStampOpen = now();
       //LED should be off
-      door.setState(digitalRead(door.Pin));
-      door.Message = "Door is OPEN ";
-      Serial.print(door.Message);
+      door.setState(0);
+      door.Message = "ALARM!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!";
+      door.Armed = false;
+      Serial.println(door.Message);
       printTime(door.TimeStampOpen);
     }
 
@@ -228,7 +240,8 @@ void doorSetup(Door doors[])
     {
       door.TimeStampClosed = now();
       door.setState(digitalRead(door.Pin));
-      door.Message = "Door is CLOSED ";
+      door.Message = "ARMED";
+      door.Armed = true;
       Serial.print(door.Message);
       printTime(door.TimeStampClosed);
     }
