@@ -17,6 +17,8 @@ SoftwareSerial serialSIM800(SIM800_TX_PIN, SIM800_RX_PIN);
 //+4591829151 sender
 const char* telephone = "+4591520714";
 char *smsMessage;
+long time = 0;
+long debounce = 200;
 
 #pragma region Door Class...
 
@@ -28,10 +30,11 @@ public:
   int SmsLED = 4;
   int DoorLED = 5;
   char DoorLEDMode = OUTPUT;
+  byte DoorLEDState;
   char SmsLEDMode = OUTPUT;
   //State of the door is 0 open or 1 closed
-  int State;
-  int PreviousState = 0;
+  byte State;
+  byte PreviousState = 0;
   bool InitialState;
   char Mode;
   bool SmSent = false;
@@ -137,23 +140,29 @@ void loop()
 {
   door.State = digitalRead(door.Pin);
 
-  if(door.State != door.PreviousState){
-  
-  if(door.State == 1){
-    door.setState(1);
-    digitalWrite(door.DoorLED, 0);
-    Serial.println("CLOSED");
-  }
-
-  if(door.State == 0){
-    door.setState(0);
-    digitalWrite(door.DoorLED, 1);
-    Serial.println("OPEN");
-  }
-  door.PreviousState = door.State;
-  }
   //If start ssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssss
-//  if(door.State != door.PreviousState){
+
+  if(door.State != door.PreviousState){  // && millis() - time > debounce){
+    
+      if(door.State == 1){
+        door.DoorLEDState = 0;
+        //digitalWrite(door.DoorLED, 0);
+        Serial.println("CLOSED");
+      }
+        
+      if(door.State == 0){
+        door.DoorLEDState = 1;
+        //digitalWrite(door.DoorLED, 1);
+        Serial.println("OPENED");
+      }
+      //time = millis();
+    }
+    
+    digitalWrite(door.DoorLED, door.DoorLEDState);
+    door.PreviousState = door.State;
+
+  
+//  if(door.State != door.PreviousState ){
 //    if(door.State == 1){
 //      Serial.println("OPEN");
 //    }
