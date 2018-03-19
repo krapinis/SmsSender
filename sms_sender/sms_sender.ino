@@ -128,7 +128,7 @@ void setup()
   //char* tempPointer = (char *)malloc(200);
   smsMessage = createMessage(door);
   Serial.print(smsMessage);
-  //free(tempPointer);
+  //free(smsMessage);
   //sendSMS(door);
 }
 
@@ -149,12 +149,8 @@ void loop()
         door.DoorLEDState = 0;
 
         if(!door.InitialState && !door.SmSent){
-        Serial.println("DOOR has been open before");
-        Serial.println("CLOSED SMS SENT");
-        
-        door.State = digitalRead(door.Pin);
+            //sendSMS(smsMessage);
         }
-        door.State = digitalRead(door.Pin);
       }
         
       if(door.State == 0){
@@ -165,10 +161,9 @@ void loop()
         }
 
         if(!door.SmSent){
-          Serial.println("OPENED SMS SENT"); 
+          //sendSMS(smsMessage);
+          Serial.println(smsMessage);
         }
-        
-        door.State = digitalRead(door.Pin);
       }
       //time = millis();
     }
@@ -401,22 +396,23 @@ char* createMessage(Door tDoor){
   }
 }
 
-void sendSMS(char *message)
+void sendSMS(char *smsMessage)
 {
 
-  //char* smsMessage = (char *)malloc(200);
-  //smsMessage = createMessage(door);
+  smsMessage = createMessage(door);
     
     //At this point module is ready to send SMS
     initializeSMSend();
     
     //Serial.println(smsMessage);
-    serialSIM800.write(message);
+    serialSIM800.write(smsMessage);
     
     //Ctrl+Z termination char
     serialSIM800.write((char)26);
+
+    door.SmSent = true;
     
-    free(message);
+    //free(message);
 }
 
 #pragma endregion SMS...
