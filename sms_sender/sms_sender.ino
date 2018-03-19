@@ -140,20 +140,35 @@ void loop()
 {
   door.State = digitalRead(door.Pin);
 
+
   //If start ssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssss
 
   if(door.State != door.PreviousState){  // && millis() - time > debounce){
     
       if(door.State == 1){
         door.DoorLEDState = 0;
-        //digitalWrite(door.DoorLED, 0);
-        Serial.println("CLOSED");
+
+        if(!door.InitialState && !door.SmSent){
+        Serial.println("DOOR has been open before");
+        Serial.println("CLOSED SMS SENT");
+        
+        door.State = digitalRead(door.Pin);
+        }
+        door.State = digitalRead(door.Pin);
       }
         
       if(door.State == 0){
         door.DoorLEDState = 1;
-        //digitalWrite(door.DoorLED, 1);
-        Serial.println("OPENED");
+        
+        if(door.InitialState){
+          door.InitialState = false;
+        }
+
+        if(!door.SmSent){
+          Serial.println("OPENED SMS SENT"); 
+        }
+        
+        door.State = digitalRead(door.Pin);
       }
       //time = millis();
     }
