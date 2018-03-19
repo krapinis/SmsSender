@@ -148,9 +148,19 @@ void loop()
       if(door.State == 1){
         door.DoorLEDState = 0;
 
-        if(!door.InitialState && !door.SmSent){
+        if(!door.InitialState){
+          
+          if(door.SmSent == false){
             //sendSMS(smsMessage);
+            Serial.println("CLOSED-----------------false");
+            door.SmSent = true;
         }
+            if(door.PreviousState == 0 && door.SmSent == true){
+              Serial.println("CLOSED-------------------true");
+              door.SmSent = false;
+            }
+        }
+        
       }
         
       if(door.State == 0){
@@ -160,9 +170,15 @@ void loop()
           door.InitialState = false;
         }
 
-        if(!door.SmSent){
+        if(door.SmSent == false){
+          Serial.println("OPEN ------------------ FALSE");
+          door.SmSent = true;
+        }
+        
+        if(door.PreviousState == 1 && door.SmSent == true){
           //sendSMS(smsMessage);
-          Serial.println(smsMessage);
+          Serial.println("OPEN--------------TRUE");
+          door.SmSent = false;
         }
       }
       //time = millis();
