@@ -16,6 +16,7 @@ SoftwareSerial serialSIM800(SIM800_TX_PIN, SIM800_RX_PIN);
 //TELEPHONE
 //+4591829151 sender
 const char* telephone = "+4591520714";
+char *smsMessage;
 
 #pragma region Door Class...
 
@@ -30,9 +31,11 @@ public:
   char SmsLEDMode = OUTPUT;
   //State of the door is 0 open or 1 closed
   int State;
-  int LastState = 1;
+  int PreviousState = 0;
+  bool InitialState;
   char Mode;
   bool SmSent = false;
+  int SmSCount;
   time_t TimeStampOpen;
   time_t TimeStampClosed;
   String ErrorMessage;
@@ -42,49 +45,26 @@ public:
   void setPin(int pin)
   {
     this->Pin = pin;
-    this->State = getState(pin);
-    //digitalRead(pin);
     this->Mode = INPUT;
-
-    if (this->State == 0)
-    {
-      digitalWrite(DoorLED, 1);
-    }
-    else if (this->State == 1)
-    {
-      digitalWrite(DoorLED, 0);
-    }else{
-      this->ErrorMessage = "Error: Check door state";
-    }
+    this->InitialState = true;
+    this->Message = "Door state is neutral at this moment";
   }
-  int getState(int pin){
-    return digitalRead(pin);
-  }
+  
   void setState(int state)
   {
 
     if (state == 0)
     {
-      State = 0;
-      TimeStampOpen = now();
-      digitalWrite(DoorLED, 1);
+      this->State = 0;
+      this->PreviousState = 1;
+      this->Message = "The door is open";
     }
     if (state == 1)
     {
-      State = 1;
-      TimeStampClosed = now();
-      digitalWrite(DoorLED, 0);
+      this->State = 1;
+      this->PreviousState = 0;
+      this->Message = "The door is closed";
     }
-  }
-  void doorOpenTime()
-  {
-    TimeStampOpen = now();
-    Serial.println(TimeStampOpen);
-  }
-  void doorClosedTime()
-  {
-    TimeStampClosed = now();
-    Serial.println(TimeStampClosed);
   }
 };
 
@@ -97,20 +77,8 @@ Door door;
 
 void setup()
 {
-
-  door.setPin(3);
-  
-  //Begin serial comunication with Arduino and Arduino IDE (Serial Monitor)
-  Serial.begin(9600);
-  while (!Serial);
-
-  printStart();
-  printDivider();
-  
-  //Being serial communication with Arduino and SIM800
-  serialSIM800.begin(9600);
-
-  //---------TIME default Setup----------------------------------------------------------------------
+    //---------TIME default Setup----------------------//
+    
   //setTime(hours, minutes, seconds, days, months, years);
   setTime(15, 59, 3, 16, 3, 18);
   time_t tempTime = now();
@@ -123,6 +91,22 @@ void setup()
     Serial.print("Time has been set to this : ");
     printTime(tempTime);
   }
+  
+  door.setPin(3);
+  door.State = digitalRead(door.Pin);
+  if(door.State == 0){
+    digitalWrite(door.DoorLED, 1);
+  }
+  
+  //Begin serial comunication with Arduino and Arduino IDE (Serial Monitor)
+  Serial.begin(9600);
+  while (!Serial);
+
+  printStart();
+  printDivider();
+  
+  //Being serial communication with Arduino and SIM800
+  serialSIM800.begin(9600);
 
   //Array of doors
   Door doors[1] = {door};
@@ -138,10 +122,10 @@ void setup()
   Serial.println("\t\t     Ready to send SMS's...");
   printDivider();
   
-  char* tempPointer = (char *)malloc(200);
-  tempPointer = createMessage(door);
-  Serial.print(tempPointer);
-  free(tempPointer);
+  //char* tempPointer = (char *)malloc(200);
+  smsMessage = createMessage(door);
+  Serial.print(smsMessage);
+  //free(tempPointer);
   //sendSMS(door);
 }
 
@@ -151,20 +135,37 @@ void setup()
 
 void loop()
 {
-  //Check the door state
   door.State = digitalRead(door.Pin);
 
-  //If start
-  if(door.State == 0 && door.State != door.LastState){
-    if(door.State == 0){
-      Serial.println("Door just OPENED");
-      door.TimeStampOpen = now();
-      digitalWrite(door.DoorLED, 1);
-      door.State = 1;
-    }
-    else if (door.State != 0) {
-      door.State = 0;
-    }
+  if(door.State != door.PreviousState){
+  
+  if(door.State == 1){
+    door.setState(1);
+    digitalWrite(door.DoorLED, 0);
+    Serial.println("CLOSED");
+  }
+
+  if(door.State == 0){
+    door.setState(0);
+    digitalWrite(door.DoorLED, 1);
+    Serial.println("OPEN");
+  }
+  door.PreviousState = door.State;
+  }
+  //If start ssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssss
+//  if(door.State != door.PreviousState){
+//    if(door.State == 1){
+//      Serial.println("OPEN");
+//    }
+//      
+//    if(door.State == 0){
+//      Serial.println("CLOSED");
+//    }
+//    //delay(50);
+//  }
+  //Switch state
+  //door.PreviousState = door.State;
+    
     //char * msg = (char *)malloc(200);
     //msg = createMessage(door);
     //sendSMS(msg);
@@ -173,7 +174,7 @@ void loop()
     //Serial.println("Open");
 
     //free(msg);
-  door.LastState = door.State; 
+    
 
   //Read SIM800 output (if available) and print it in Arduino IDE Serial Monitor
   //if (serialSIM800.available())
@@ -185,7 +186,6 @@ void loop()
   //{
   //  serialSIM800.write(Serial.read());
   //}
-}
 }
 
 #pragma endregion LOOP...
