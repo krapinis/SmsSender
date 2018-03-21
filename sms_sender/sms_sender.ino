@@ -6,7 +6,7 @@
 GPRS gprs;
 
 char* number = (char*)"+4591520714";
-char message[200] = "System has been armed";
+char message[256] = "System has been armed\r\n";
 char tempHours[5];
 char tempMinutes[5];
 char tempSeconds[5];
