@@ -6,12 +6,12 @@
 GPRS gprs;
 
 char* number = (char*)"+4591520714";
-char* message = (char*)"System has been armed\r\n";
+char message[200] = "System has been armed";
 char tempHours[5];
 char tempMinutes[5];
 char tempSeconds[5];
-char* timeString = (char*)"";
-char* smsMessage = (char*)"";
+char timeString[15];
+char* smsMessage;
 time_t current_time;
  
 void setup() {
@@ -24,6 +24,7 @@ void setup() {
   //setTime(hours, minutes, seconds, days, months, years);
   setTime(15, 59, 3, 16, 3, 18);
   time_t current_time = now();
+  
   if (timeStatus() == timeNotSet)
   {
     error:
@@ -31,41 +32,40 @@ void setup() {
   }
   else
   {
-    Serial.println("OK Time set correct");
+    Serial.println("OK TIME");
   }
   
   converTime();
   
   
-  //Serial.println("Sending SMS ...");
-  //sendSMS(smsMessage);
+  Serial.println("SIM800L sending SMS...");
+  sendSMS(smsMessage);
 }
 
 void converTime(){
   //FORMAT TIME
     
     //HOURS
-    
-    sprintf(tempHours, "%d", hour(current_time));
+    snprintf(tempHours, 5, "%d", hour(current_time));
     strcat(timeString, tempHours);
     strcat(timeString, ":");
-
+    
     //MINUTES
-    sprintf(tempMinutes, "%d",minute(current_time));
+    snprintf(tempMinutes, 5, "%d", minute(current_time));
     strcat(timeString, tempMinutes);
     strcat(timeString, ":");
-
-    //SECONDS
-    sprintf(tempSeconds, "%d", second(current_time));
-    strcat(timeString, tempSeconds);
     
-    //strcat(message, timeString);
-    //String temp = message + String(timeString);
-    char* s = (char*)"abc";
-    for(int i = 0; i <= strlen(s); i++){
-      Serial.println(s[i]);
-      
-    }
+    //SECONDS
+    snprintf(tempSeconds, 5, "%d", second(current_time));
+    strcat(timeString, tempSeconds);
+
+    //SMS Message
+    strcat(message, timeString);
+    smsMessage = message;
+    
+    Serial.println(smsMessage);
+
+    
 }
 
 void loop() {
@@ -81,6 +81,8 @@ void sendSMS(char *msg){
       Serial.print("init error\r\n");
   } 
   Serial.println("Init success, start to send SMS message...");
+  //char* t = (char*)"TEST";
   gprs.sendSMS(number, msg); //define phone number and text
+  Serial.println("SMS has been sent");
 }
 
