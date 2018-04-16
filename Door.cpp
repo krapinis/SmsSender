@@ -27,8 +27,16 @@ class Door
                     this->state = 0;
                     strcat(this->message, "Door is open");
                 }
+                if(state == 1){
+                    this->state = 1;
+                    strcat(this->message, "Door is closed");
+                }
             }
             
+        void setTime(){
+            this->current_time = now();
+        }
+
         int getPin()
             {
                 return pin;

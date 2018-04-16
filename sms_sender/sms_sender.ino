@@ -14,8 +14,13 @@ char tempSeconds[5];
 char timeString[15];
 char* smsMessage;
 time_t current_time;
- 
+
+
+Door door;
+
 void setup() {
+
+  
   //Begin serial comunication with Arduino and Arduino IDE (Serial Monitor)
   Serial.begin(9600);
   while(!Serial);
