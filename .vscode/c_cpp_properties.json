@@ -25,14 +25,15 @@
                     "${workspaceRoot}",
                     "C:\\Source\\SmsSender",
                     "C:/Program Files (x86)/Arduino",
-                    
                     "C:\\Program Files (x86)\\Arduino\\hardware\\arduino\\avr\\cores\\arduino",
                     "C:\\Program Files (x86)\\Arduino\\hardware\\tools\\avr\\avr\\include",
                     "C:\\Program Files (x86)\\Arduino\\hardware\\tools\\avr\\lib\\gcc\\avr\\4.9.2\\include",
                     "C:\\Program Files (x86)\\Arduino\\hardware\\arduino\\avr\\variants\\mega"
                 ]
             },
-            "intelliSenseMode": "msvc-x64"
+            "intelliSenseMode": "msvc-x64",
+            "cStandard": "c11",
+            "cppStandard": "c++17"
         }
     ],
     "version": 3
