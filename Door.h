@@ -11,7 +11,7 @@ namespace Door{
                 Door(int pin);
                 void setPin(int pin);
                 int getPin(){return m_pin;}
-        }
+        };
 }
 
 #endif
