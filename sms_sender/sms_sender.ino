@@ -1,12 +1,34 @@
 #include <Time.h>
 #include <TimeLib.h>
 #include <SoftwareSerial.h>
-#include <Door.h>
+//#include <Door.h>
 #include <gprs.h>
  
 GPRS gprs;
 
+//  Sketch: SwitchingThings_02
+//
+//  An  example of turning an LED on and off using a button switch
+//
+//  Pins
+//  D10 to resister and LED
+//  D2 to push button switch
+//  
+ 
+// Define the pins being used
+int pin_LED = 13; //out
+int pin_switch = 4; //in
+ 
+// variables to hold the new and old switch states
+boolean oldSwitchState = LOW;
+boolean newSwitchState = LOW;
+ 
+
+
+long time = 0;         // the last time the output pin was toggled
+long debounce = 200;   // the debounce time, increase if the output flickers
 char* number = (char*)"+4591520714";
+char* number1 = (char*)"+4551222390";
 char message[256] = "System has been armed\r\n";
 char tempHours[5];
 char tempMinutes[5];
@@ -14,38 +36,19 @@ char tempSeconds[5];
 char timeString[15];
 char* smsMessage;
 time_t current_time;
-
-
-Door door;
-
+ 
 void setup() {
-
-  
   //Begin serial comunication with Arduino and Arduino IDE (Serial Monitor)
   Serial.begin(9600);
   while(!Serial);
+  pinMode(LED_BUILTIN, OUTPUT);
+  pinMode(pin_switch, INPUT);
+  pinMode(pin_LED, OUTPUT);
+  Serial.print("SWITCH IN ");
+  Serial.println(pin_switch);
+  Serial.print("OUT ");
+  Serial.println(pin_LED);
   
-  //---------TIME default Setup----------------------//
-    
-  //setTime(hours, minutes, seconds, days, months, years);
-  setTime(15, 59, 3, 16, 3, 18);
-  time_t current_time = now();
-  
-  if (timeStatus() == timeNotSet)
-  {
-    error:
-    Serial.println("ERROR time set incorrect");
-  }
-  else
-  {
-    Serial.println("OK TIME");
-  }
-  
-  converTime();
-  
-  
-  Serial.println("SIM800L sending SMS...");
-  sendSMS(smsMessage);
 }
 
 void converTime(){
@@ -75,6 +78,30 @@ void converTime(){
 }
 
 void loop() {
+
+    if ( newSwitchState != oldSwitchState ) 
+    {
+       if ( newSwitchState == HIGH )
+       {
+        Serial.print("SMS Sent... ");
+        Serial.println(newSwitchState);
+        
+        //digitalWrite(pin_LED, HIGH);
+        digitalWrite(LED_BUILTIN, LOW);
+       }
+       else
+       {
+        Serial.print("SMS Sent... ");
+        Serial.println(newSwitchState);
+        
+        //digitalWrite(pin_LED, LOW);
+        digitalWrite(LED_BUILTIN, HIGH);
+       }
+ 
+       oldSwitchState = newSwitchState;
+    }   
+
+newSwitchState = digitalRead(pin_switch);
   
 }
 

@@ -1,6 +1,6 @@
 {
     "sketch": "sms_sender.ino",
-    "port": "COM3",
+    "port": "COM4",
     "board": "arduino:avr:uno",
     "output": "../build",
     "debugger": "jlink"
